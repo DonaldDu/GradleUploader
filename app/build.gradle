@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.dhy.GradleUploader'
+//apply plugin: 'com.dhy.GradleUploader'
 
 android {
     compileSdkVersion 28
@@ -33,20 +33,20 @@ android {
     }
 }
 
-uploader {
-//    enable = false
-    url = 'http://www.wwvas.com/vasms-web/uploadversion/add'
-    extras = [
-            "packagename": android.defaultConfig.applicationId,
-            "versionname": android.defaultConfig.versionName,
-            "versioncode": android.defaultConfig.versionCode,
-            "versiontype": 0,
-            "message"    : "test",
-    ]
-    onGetApk = { fileName, filePath, extras ->
-        extras['message'] = fileName
-    }
-}
+//uploader {
+////    enable = false
+//    url = 'http://www.wwvas.com/vasms-web/uploadversion/add'
+//    extras = [
+//            "packagename": android.defaultConfig.applicationId,
+//            "versionname": android.defaultConfig.versionName,
+//            "versioncode": android.defaultConfig.versionCode,
+//            "versiontype": 0,
+//            "message"    : "test",
+//    ]
+//    onGetApk = { fileName, filePath, extras ->
+//        extras['message'] = fileName
+//    }
+//}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     testImplementation 'junit:junit:4.12'
