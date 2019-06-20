@@ -11,15 +11,6 @@ android {
         versionName "1.0"
     }
 
-    signingConfigs {
-        release {
-            storeFile file("buglydemo.jks")
-            storePassword "buglydemo"
-            keyAlias "buglydemo"
-            keyPassword "buglydemo"
-        }
-    }
-
     buildTypes {
         debug {
             minifyEnabled false
@@ -28,14 +19,13 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
         }
     }
 }
 
 //uploader {
 ////    enable = false
-//    url = 'http://www.wwvas.com/vasms-web/uploadversion/add'
+//    url = 'http://www.demo.com/uploadversion'
 //    extras = [
 //            "packagename": android.defaultConfig.applicationId,
 //            "versionname": android.defaultConfig.versionName,
