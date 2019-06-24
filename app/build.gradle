@@ -1,0 +1,44 @@
+apply plugin: 'com.android.application'
+//apply plugin: 'com.dhy.GradleUploader'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.devilwwj.plugintest"
+        minSdkVersion 14
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+//uploader {
+////    enable = false
+//    url = 'http://www.demo.com/uploadversion'
+//    extras = [
+//            "packagename": android.defaultConfig.applicationId,
+//            "versionname": android.defaultConfig.versionName,
+//            "versioncode": android.defaultConfig.versionCode,
+//            "versiontype": 0,
+//            "message"    : "test",
+//    ]
+//    onGetApk = { fileName, filePath, extras ->
+//        extras['message'] = fileName
+//    }
+//}
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+}

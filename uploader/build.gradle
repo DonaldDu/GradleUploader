@@ -1,0 +1,16 @@
+apply plugin: 'groovy'
+apply plugin: 'com.novoda.bintray-release'
+
+publish {
+    userOrg = 'user'
+    groupId = 'com.dhy'
+    artifactId = 'GradleUploader'
+    //noinspection GroovyAccessibility
+    publishVersion = '0.1'
+    desc = 'desc'
+    website = 'website'
+}
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+}
