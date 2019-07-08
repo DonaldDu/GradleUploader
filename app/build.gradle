@@ -22,23 +22,22 @@ android {
     }
 }
 
-def demo = '''
-apply plugin: 'com.dhy.GradleUploader'
-uploader {
-    //enable = true//default is true
-    url = 'http://www.demo.com/uploadversion'
-    extras = [
-            "packagename": android.defaultConfig.applicationId,
-            "versionname": android.defaultConfig.versionName,
-            "versioncode": android.defaultConfig.versionCode,
-            "versiontype": 0,
-            "message"    : "test",
-    ]
-    onGetApk = { fileName, filePath, extras ->
-        extras['message'] = fileName
+if (uploaderEnable) {
+    apply plugin: 'com.dhy.GradleUploader'
+    uploader {
+        url = 'http://www.demo.com/uploadversion'
+        extras = [
+                "packagename": android.defaultConfig.applicationId,
+                "versionname": android.defaultConfig.versionName,
+                "versioncode": android.defaultConfig.versionCode,
+                "versiontype": 0,
+                "message"    : "test",
+        ]
+        onGetApk = { fileName, filePath, extras ->
+            extras['message'] = fileName
+        }
     }
 }
-'''
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])

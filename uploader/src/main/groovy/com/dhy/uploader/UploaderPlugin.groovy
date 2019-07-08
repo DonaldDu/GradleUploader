@@ -60,15 +60,16 @@ class UploaderPlugin implements Plugin<Project> {
                 println("$pluginName: the option debugOn is closed, if you want to upload apk file on debug model, you can set debugOn = true to open it")
                 return
             }
+            println("\n*****************************************************************************")
             uploadApk(generateUploadInfo(variant))
+            println("*****************************************************************************\n")
         }
         uploadTask.group = 'upload'
-        println("$pluginName:create ${uploadTask.name}")
         return uploadTask
     }
 
     boolean uploadApk(UploadInfo uploadInfo) {
-        println("$pluginName: Apk start uploading....")
+        println("$pluginName: start uploading....")
         def url = getSetting().url
         if (url == null) {
             project.logger.error("null UPLOAD URL")
@@ -84,23 +85,19 @@ class UploaderPlugin implements Plugin<Project> {
         }
     }
 
-    boolean post(String url, String filePath, Map<String, ?> extras) {
-        HttpURLConnectionUtil connectionUtil = new HttpURLConnectionUtil(url, "POST")
-
+    boolean post(String url, String filePath, Map<String, ?> params) {
         def apk = new File(filePath)
-        def s = getSetting()
-        if (s.onGetApk != null) s.onGetApk.call(apk.name, apk.absolutePath, s.extras)
+        def setting = getSetting()
+        params.put(setting.KEY_FILE, apk)
+        if (setting.onGetApk != null) setting.onGetApk.call(apk.name, apk.absolutePath, params)
 
-        if (extras != null) {
-            extras.keySet().forEach {
-                println("TextParameter $it: ${extras[it]}")
-                connectionUtil.addTextParameter(it, extras[it].toString())
+        if (params != null) {
+            params.keySet().forEach {
+                println("Parameter $it: ${params[it]}")
             }
         }
 
-        connectionUtil.addFileParameter(getSetting().KEY_FILE, apk)
-
-        String result = new String(connectionUtil.post(), "UTF-8")
+        String result = HttpUtil.upload(url, params)
         def data = new JsonSlurper().parseText(result)
         if (data.result.code == 0) {
             println("$pluginName --->apk url: " + data.data.url)
