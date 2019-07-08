@@ -9,18 +9,12 @@ dependencies {
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 publishing {
-    task sourceJar(type: Jar) {
-        classifier "sources"
-        from sourceSets.main.allJava
-    }
     publications {
         maven(MavenPublication) {
             from components.java
             groupId 'com.gitee.DonaldDu'
             artifactId 'GradleUploader'
             version '0.2.1'
-
-            artifact sourceJar
         }
     }
 }
