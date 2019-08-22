@@ -3,11 +3,12 @@ package com.devilwwj.plugintest
 import okhttp3.*
 import org.junit.Test
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 class UploadTest {
     @Test
     fun upload() {
-        val file = File("C:\\Users\\Donald\\Downloads\\GenDEX.apk")
+        val file = File("D:\\ANETU3\\app\\build\\outputs\\apk\\debug\\PUCHE-debug_v3.0.2.4.162-c162_master-1ea6ddd.apk")
         val url = BuildConfig.UPLOAD_APK_URL
         if (file.exists() && url.isNotEmpty()) {
             val params: MutableMap<String, Any> = mutableMapOf()
@@ -37,7 +38,10 @@ class UploadTest {
         val reqBuilder = Request.Builder().url(url).post(builder.build())
         reqBuilder.header("Authorization", BuildConfig.UPLOAD_APK_AUTHORIZATION)
         val request = reqBuilder.build()
-        val okHttpClient = OkHttpClient()
+        val okHttpClient = OkHttpClient.Builder()
+                .readTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .build()
         val response = okHttpClient.newCall(request).execute()
         return if (response.isSuccessful) {
             response.body()?.string()

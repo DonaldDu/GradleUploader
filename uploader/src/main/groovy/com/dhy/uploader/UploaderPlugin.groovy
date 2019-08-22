@@ -8,6 +8,8 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 
+import java.util.concurrent.TimeUnit
+
 class UploaderPlugin implements Plugin<Project> {
     def pluginName = 'uploader'
     private Project project = null
@@ -132,7 +134,10 @@ class UploaderPlugin implements Plugin<Project> {
         Request.Builder reqBuilder = new Request.Builder().url(url).post(builder.build())
         getSetting().initRequest(reqBuilder)
         final Request request = reqBuilder.build()
-        OkHttpClient okHttpClient = new OkHttpClient()
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .readTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .build()
         Response response = okHttpClient.newCall(request).execute()
         if (response.isSuccessful()) {
             return response.body()?.string()

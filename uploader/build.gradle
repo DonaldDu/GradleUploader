@@ -23,4 +23,7 @@ publishing {
             artifact sourceJar
         }
     }
+    if (project.hasProperty('mavenPublishRepositories')) {
+        with(mavenPublishRepositories)
+    }
 }

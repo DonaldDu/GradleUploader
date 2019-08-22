@@ -33,7 +33,7 @@ android {
 
 if (uploaderEnable) {
     if (hasProperty('UPLOAD_APK_AUTHORIZATION')) {
-        uploadApk()
+        uploadApk(0)
     } else {//demo
         apply plugin: 'com.dhy.GradleUploader'
         uploader {
