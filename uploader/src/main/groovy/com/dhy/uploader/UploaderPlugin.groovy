@@ -1,9 +1,12 @@
 package com.dhy.uploader
 
+import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.JSONObject
+import com.alibaba.fastjson.serializer.SerializerFeature
+import okhttp3.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import groovy.json.JsonSlurper
 
 class UploaderPlugin implements Plugin<Project> {
     def pluginName = 'uploader'
@@ -97,13 +100,48 @@ class UploaderPlugin implements Plugin<Project> {
             }
         }
 
-        String result = HttpUtil.upload(url, params)
-        def data = new JsonSlurper().parseText(result)
-        if (data.result.code == 0) {
-            println("$pluginName --->apk url: " + data.data.url)
+        String result = upload(url, params)
+        if (result != null) {
+            println(jsonFormat(result))
             return true
         }
         return false
+    }
+
+    static String jsonFormat(String jsonString) {
+        JSONObject object = JSONObject.parseObject(jsonString)
+        jsonString = JSON.toJSONString(object,
+                SerializerFeature.PrettyFormat,
+                SerializerFeature.WriteMapNullValue,
+                SerializerFeature.WriteDateUseDateFormat)
+        return jsonString
+    }
+
+    String upload(String url, Map<String, Object> params) {
+        MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM)
+        for (String key : params.keySet()) {
+            Object v = params.get(key)
+            if (v instanceof File) {
+                File file = (File) v
+                MediaType mediaType = MediaType.parse("application/octet-stream")
+                builder.addFormDataPart(key, file.getName(), RequestBody.create(mediaType, file))
+            } else {
+                builder.addFormDataPart(key, v.toString())
+            }
+        }
+        Request.Builder reqBuilder = new Request.Builder().url(url).post(builder.build())
+        getSetting().initRequest(reqBuilder)
+        final Request request = reqBuilder.build()
+        OkHttpClient okHttpClient = new OkHttpClient()
+        Response response = okHttpClient.newCall(request).execute()
+        if (response.isSuccessful()) {
+            return response.body()?.string()
+        } else {
+            println("HTTP ERROR CODE " + response.code())
+            println("error response")
+            println(response.body()?.string())
+            return null
+        }
     }
 
     UploaderExtension getSetting() {
