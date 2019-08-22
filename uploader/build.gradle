@@ -7,6 +7,7 @@ dependencies {
     implementation 'com.alibaba:fastjson:1.2.59'
 }
 
+//当前只能发布到私有服务器，jitpack编译找不到安卓依赖
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 publishing {
