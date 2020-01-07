@@ -1,4 +1,4 @@
-# GradleUploader
+# GradleUploader [![](https://jitpack.io/v/DonaldDu/GradleUploader.svg)](https://jitpack.io/#DonaldDu/GradleUploader)
 
 #### 介绍
 {**以下是码云平台说明，您可以替换此简介**
