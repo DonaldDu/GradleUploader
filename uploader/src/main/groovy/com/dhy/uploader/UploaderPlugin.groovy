@@ -131,20 +131,45 @@ class UploaderPlugin implements Plugin<Project> {
                 builder.addFormDataPart(key, v.toString())
             }
         }
-        Request.Builder reqBuilder = new Request.Builder().url(url).post(builder.build())
-        getSetting().initRequest(reqBuilder)
-        final Request request = reqBuilder.build()
+
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .readTimeout(60, TimeUnit.SECONDS)
                 .writeTimeout(60, TimeUnit.SECONDS)
                 .build()
+
+        JSONObject json = null
+        if (getSetting().fetchToken) {
+            Request.Builder tokenReqBuilder = new Request.Builder()
+            getSetting().initFetchToken(tokenReqBuilder)
+            tokenReqBuilder.post(RequestBody.create(null, ""))
+            json = fetchToken(okHttpClient, tokenReqBuilder.build())
+        }
+
+        Request.Builder uploadReqBuilder = new Request.Builder().url(url).post(builder.build())
+        getSetting().initRequest(json, uploadReqBuilder)
+
+        final Request request = uploadReqBuilder.build()
         Response response = okHttpClient.newCall(request).execute()
         if (response.isSuccessful()) {
             return response.body()?.string()
         } else {
-            println("HTTP ERROR CODE " + response.code())
-            println("error response")
-            println(response.body()?.string())
+            printErrorResponse(response)
+            return null
+        }
+    }
+
+    private static void printErrorResponse(Response res) {
+        println("HTTP ERROR CODE " + res.code())
+        println("error response")
+        println(res.body()?.string())
+    }
+
+    private static JSONObject fetchToken(OkHttpClient okHttpClient, Request fetchTokenReq) {
+        def response = okHttpClient.newCall(fetchTokenReq).execute()
+        if (response.isSuccessful()) {
+            return JSONObject.parseObject(response.body()?.string())
+        } else {
+            printErrorResponse(response)
             return null
         }
     }

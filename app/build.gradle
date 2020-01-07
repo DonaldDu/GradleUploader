@@ -32,25 +32,28 @@ android {
 }
 
 if (uploaderEnable) {
-    if (hasProperty('UPLOAD_APK_AUTHORIZATION')) {
-        uploadApk(0)
-    } else {//demo
-        apply plugin: 'com.dhy.GradleUploader'
-        uploader {
-            url = 'https://www.demo.com/add'
-            initRequest = { reqBuilder ->
-                reqBuilder.header("Authorization", "123")
-            }
-            extras = [
-                    "packagename": android.defaultConfig.applicationId,
-                    "versionname": android.defaultConfig.versionName,
-                    "versioncode": android.defaultConfig.versionCode,
-                    "versiontype": 0,
-                    "message"    : "test",
-            ]
-            onGetApk = { fileName, filePath, extras ->
-                extras['message'] = fileName
-            }
+//    uploadApk(0)//global upload apk
+    apply plugin: 'com.dhy.GradleUploader'
+    uploader {
+        url = 'https://www.demo.com/'
+        fetchToken = true
+        initFetchToken = { reqBuilder ->
+            reqBuilder.url(UPLOAD_APK_LOGIN_URL)
+                    .header("Authorization", "123456")
+        }
+        initRequest = { tokenJson, reqBuilder ->
+            def token = "Bearer " + tokenJson.getString('access_token')
+            reqBuilder.header("Authorization", token)
+        }
+        extras = [
+                "packagename": android.defaultConfig.applicationId,
+                "versionname": android.defaultConfig.versionName,
+                "versioncode": android.defaultConfig.versionCode,
+                "versiontype": 0,
+                "message"    : "test",
+        ]
+        onGetApk = { fileName, filePath, extras ->
+            extras['message'] = fileName
         }
     }
 }
