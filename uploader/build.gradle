@@ -19,7 +19,7 @@ publishing {
         }
         maven(MavenPublication) {
             from components.java
-            groupId 'com.gitee.DonaldDu'
+            groupId 'com.github.DonaldDu'
             artifactId 'GradleUploader'
             version uploader_version
             artifact sourceJar
