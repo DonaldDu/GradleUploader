@@ -18,7 +18,7 @@ android {
             buildConfigField "String", "UPLOAD_APK_AUTHORIZATION", "\"\""
         }
     }
-
+    if (project.hasProperty('appendInfoToApk')) android.with(appendInfoToApk)
     buildTypes {
         debug {
             minifyEnabled false
