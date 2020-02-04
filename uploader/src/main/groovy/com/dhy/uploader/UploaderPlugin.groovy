@@ -18,7 +18,9 @@ class UploaderPlugin implements Plugin<Project> {
     void apply(Project project) {
         this.project = project
         // 接收外部参数
-        project.extensions.create("uploader", UploaderExtension)
+        project.extensions.create("uploader", UploaderSetting)
+        project.uploader.extensions.create("debugServer", ServerSetting)
+        project.uploader.extensions.create("releaseServer", ServerSetting)
 
         // 取得外部参数
         if (project.android.hasProperty("applicationVariants")) { // For android application.
@@ -53,7 +55,12 @@ class UploaderPlugin implements Plugin<Project> {
             println("$pluginName: the apkFile is default set to build file")
             println("$pluginName: your apk absolutepath :" + apkFile.getAbsolutePath())
         }
-
+        if (variant.name.contains("debug")) {
+            uploadInfo.server = getSetting().debugServer
+        } else {
+            uploadInfo.server = getSetting().releaseServer
+        }
+        println 'uploadUrl:' + uploadInfo.server.uploadUrl
         return uploadInfo
     }
 
@@ -75,12 +82,8 @@ class UploaderPlugin implements Plugin<Project> {
 
     boolean uploadApk(UploadInfo uploadInfo) {
         println("$pluginName: start uploading....")
-        def url = getSetting().url
-        if (url == null) {
-            project.logger.error("null UPLOAD URL")
-            return false
-        }
-        def res = post(url, uploadInfo.sourceFile, uploadInfo.extras)
+        NetUtil.server = uploadInfo.server
+        def res = post(uploadInfo.sourceFile, uploadInfo.extras)
         if (!res) {
             project.logger.error("$pluginName: Failed to upload!")
             return false
@@ -90,7 +93,7 @@ class UploaderPlugin implements Plugin<Project> {
         }
     }
 
-    boolean post(String url, String filePath, Map<String, ?> params) {
+    boolean post(String filePath, Map<String, ?> params) {
         def apk = new File(filePath)
         def setting = getSetting()
         params.put(setting.KEY_FILE, apk)
@@ -101,8 +104,7 @@ class UploaderPlugin implements Plugin<Project> {
                 println("Parameter $it: ${params[it]}")
             }
         }
-
-        String result = upload(url, params)
+        String result = NetUtil.uploadFile(params)
         if (result != null) {
             println(jsonFormat(result))
             return true
@@ -119,62 +121,7 @@ class UploaderPlugin implements Plugin<Project> {
         return jsonString
     }
 
-    String upload(String url, Map<String, Object> params) {
-        MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM)
-        for (String key : params.keySet()) {
-            Object v = params.get(key)
-            if (v instanceof File) {
-                File file = (File) v
-                MediaType mediaType = MediaType.parse("application/octet-stream")
-                builder.addFormDataPart(key, file.getName(), RequestBody.create(mediaType, file))
-            } else {
-                builder.addFormDataPart(key, v.toString())
-            }
-        }
-
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .readTimeout(60, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
-                .build()
-
-        JSONObject json = null
-        if (getSetting().fetchToken) {
-            Request.Builder tokenReqBuilder = new Request.Builder()
-            getSetting().initFetchToken(tokenReqBuilder)
-            tokenReqBuilder.post(RequestBody.create(null, ""))
-            json = fetchToken(okHttpClient, tokenReqBuilder.build())
-        }
-
-        Request.Builder uploadReqBuilder = new Request.Builder().url(url).post(builder.build())
-        getSetting().initRequest(json, uploadReqBuilder)
-
-        final Request request = uploadReqBuilder.build()
-        Response response = okHttpClient.newCall(request).execute()
-        if (response.isSuccessful()) {
-            return response.body()?.string()
-        } else {
-            printErrorResponse(response)
-            return null
-        }
-    }
-
-    private static void printErrorResponse(Response res) {
-        println("HTTP ERROR CODE " + res.code())
-        println("error response")
-        println(res.body()?.string())
-    }
-
-    private static JSONObject fetchToken(OkHttpClient okHttpClient, Request fetchTokenReq) {
-        def response = okHttpClient.newCall(fetchTokenReq).execute()
-        if (response.isSuccessful()) {
-            return JSONObject.parseObject(response.body()?.string())
-        } else {
-            printErrorResponse(response)
-            return null
-        }
-    }
-
-    UploaderExtension getSetting() {
+    UploaderSetting getSetting() {
         return project.uploader
     }
 
@@ -182,5 +129,6 @@ class UploaderPlugin implements Plugin<Project> {
         // Name of apk file to upload.
         public String sourceFile = null
         public Map<String, ?> extras = null
+        public ServerSetting server = null
     }
 }

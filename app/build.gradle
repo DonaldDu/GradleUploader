@@ -31,19 +31,19 @@ android {
     }
 }
 
-if (uploaderEnable) {
+if (project.hasProperty('uploaderEnable')) {
 //    uploadApk(0)//global upload apk
     apply plugin: 'com.dhy.GradleUploader'
     uploader {
-        url = 'https://www.demo.com/'
-        fetchToken = true
-        initFetchToken = { reqBuilder ->
-            reqBuilder.url(UPLOAD_APK_LOGIN_URL)
-                    .header("Authorization", "123456")
+        debugServer {
+            loginUrl = APK_UPLOADER_DEBUG_LOGIN_URL
+            uploadUrl = APK_UPLOADER_DEBUG_UPLOAD_URL
+            loginToken = APK_UPLOADER_DEBUG_LOGIN_TOKEN
         }
-        initRequest = { tokenJson, reqBuilder ->
-            def token = "Bearer " + tokenJson.getString('access_token')
-            reqBuilder.header("Authorization", token)
+        releaseServer {
+            loginUrl = APK_UPLOADER_RELEASE_LOGIN_URL
+            uploadUrl = APK_UPLOADER_RELEASE_UPLOAD_URL
+            loginToken = APK_UPLOADER_RELEASE_LOGIN_TOKEN
         }
         extras = [
                 "packagename": android.defaultConfig.applicationId,

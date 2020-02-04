@@ -1,31 +1,19 @@
 apply plugin: 'groovy'
-
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
     implementation 'com.squareup.okhttp3:okhttp:3.14.4'
     implementation 'com.alibaba:fastjson:1.2.60'
+    implementation 'io.sigpipe:jbsdiff:1.0'
 }
 
-//当前只能发布到私有服务器，jitpack编译找不到安卓依赖
 apply plugin: 'java'
-apply plugin: 'maven-publish'
-publishing {
-    publications {
-        task sourceJar(type: Jar) {
-            //noinspection GrDeprecatedAPIUsage
-            classifier "sources"
-            from sourceSets.main.groovy
-        }
-        maven(MavenPublication) {
-            from components.java
-            groupId 'com.github.DonaldDu'
-            artifactId 'GradleUploader'
-            version uploader_version
-            artifact sourceJar
-        }
-    }
-    if (project.hasProperty('mavenPublishRepositories')) {
-        with(mavenPublishRepositories)
-    }
+apply plugin: 'com.novoda.bintray-release'
+publish {
+    userOrg = 'user'
+    groupId = 'com.github.DonaldDu'
+    artifactId = 'GradleUploader'
+    publishVersion = uploader_version
+    desc = 'desc'
+    website = 'website'
 }
