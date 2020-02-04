@@ -5,6 +5,8 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.14.4'
     implementation 'com.alibaba:fastjson:1.2.60'
     implementation 'io.sigpipe:jbsdiff:1.0'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'commons-io:commons-io:2.6'
 }
 
 apply plugin: 'java'

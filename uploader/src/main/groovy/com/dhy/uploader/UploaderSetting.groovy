@@ -3,13 +3,13 @@ package com.dhy.uploader
 class UploaderSetting {
     public Boolean enable = true
     public Boolean debugOn = true
-    public String KEY_FILE = 'file'
-    public String apkFile = null
+    public String updateLogFileName = 'DeployLog.log'
+    public String updateLogFileEncoding = 'GBK'
 
-//    public ServerSetting debugServer = null   //extensions
-//    public ServerSetting releaseServer = null //extensions
+//    public ServerSetting debug = null   //extensions
+//    public ServerSetting release = null //extensions
 
     public String oldApkFolder = null
-    public Map<String, ?> extras = new HashMap()
-    public def onGetApk = { fileName, filePath, extras -> }
+    public def apkVersionCode = null
+    public String apkVersionName = null
 }

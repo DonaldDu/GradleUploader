@@ -1,9 +1,12 @@
 package com.dhy.uploader;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.gson.Gson;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -16,7 +19,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class NetUtil {
-    public static ServerSetting server;
+    public static ServerSetting setting;
     private static final OkHttpClient okHttpClient;
 
     static {
@@ -27,8 +30,8 @@ public class NetUtil {
     }
 
     public static String uploadFile(Map<String, Object> params) throws IOException {
-        String token = fetchToken(server.loginUrl, server.loginToken);
-        return uploadFile(server.uploadUrl, params, token);
+        String token = fetchToken(setting.loginUrl, setting.loginToken);
+        return uploadFile(setting.uploadUrl, params, token);
     }
 
     private static String uploadFile(String url, Map<String, Object> params, String token) throws IOException {
@@ -85,5 +88,43 @@ public class NetUtil {
         } catch (IOException e) {
             return "";
         }
+    }
+
+    public static AppVersion fetchLatestApkVersion() {
+        try {
+            return fetchLatestApkVersion(setting.appId, setting.appType);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private static AppVersion fetchLatestApkVersion(String appId, int appType) throws IOException {
+        String url = String.format(setting.apkVersionUrl + "?packagename=%s&versiontype=%s", appId, appType);
+        System.out.println("fetchLatestApkVersion " + url);
+        Request request = new Request.Builder().url(url).build();
+        Response response = okHttpClient.newCall(request).execute();
+        if (response.isSuccessful()) {
+            String json = getBody(response);
+            return new Gson().fromJson(json, AppVersion.Response.class).data;
+        } else {
+            printErrorResponse(response);
+            return null;
+        }
+    }
+
+    static void downloadFile(File file, String url) throws IOException {
+        Request request = new Request.Builder().url(url).build();
+        Response response = okHttpClient.newCall(request).execute();
+        assert response.body() != null;
+        InputStream inputStream = response.body().byteStream();
+        FileOutputStream outputStream = new FileOutputStream(file);
+        byte[] buf = new byte[1024 * 1024];//1MB
+        int size;
+        while ((size = inputStream.read(buf)) != -1) {
+            outputStream.write(buf, 0, size);
+        }
+        outputStream.flush();
+        outputStream.close();
+        inputStream.close();
     }
 }

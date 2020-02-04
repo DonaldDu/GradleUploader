@@ -5,7 +5,7 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.devilwwj.plugintest"
+        applicationId "com.dhy.UploaderTest"
         minSdkVersion 14
         targetSdkVersion 28
         versionCode 1
@@ -35,25 +35,26 @@ if (project.hasProperty('uploaderEnable')) {
 //    uploadApk(0)//global upload apk
     apply plugin: 'com.dhy.GradleUploader'
     uploader {
-        debugServer {
+        apkVersionCode = android.defaultConfig.versionCode
+        apkVersionName = android.defaultConfig.versionName
+        oldApkFolder = 'E:\\360Downloads'
+        debug {
             loginUrl = APK_UPLOADER_DEBUG_LOGIN_URL
             uploadUrl = APK_UPLOADER_DEBUG_UPLOAD_URL
             loginToken = APK_UPLOADER_DEBUG_LOGIN_TOKEN
+            apkVersionUrl = APK_UPLOADER_DEBUG_VERSION_URL
+
+            appId = android.defaultConfig.applicationId
+            appType = 0
         }
-        releaseServer {
+        release {
             loginUrl = APK_UPLOADER_RELEASE_LOGIN_URL
             uploadUrl = APK_UPLOADER_RELEASE_UPLOAD_URL
             loginToken = APK_UPLOADER_RELEASE_LOGIN_TOKEN
-        }
-        extras = [
-                "packagename": android.defaultConfig.applicationId,
-                "versionname": android.defaultConfig.versionName,
-                "versioncode": android.defaultConfig.versionCode,
-                "versiontype": 0,
-                "message"    : "test",
-        ]
-        onGetApk = { fileName, filePath, extras ->
-            extras['message'] = fileName
+            apkVersionUrl = APK_UPLOADER_RELEASE_VERSION_URL
+
+            appId = android.defaultConfig.applicationId
+            appType = 1
         }
     }
 }
