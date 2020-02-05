@@ -35,8 +35,25 @@ class UploaderPlugin implements Plugin<Project> {
                 // Create task.
                 createUploadTask(variant).dependsOn project.tasks["assemble${variantName}"]
                 createUploadApkAndPatchTask(variant).dependsOn project.tasks["assemble${variantName}"]
+                createUploadApkAndPatchWithScriptTask(variant).dependsOn project.tasks["assemble${variantName}"]
             }
         }
+    }
+
+    private Task createUploadApkAndPatchWithScriptTask(Object variant) {
+        String variantName = variant.name.capitalize()
+        Task task = project.tasks.create("upload${variantName}ApkByScript").doLast {
+            println("\n*****************************************************************************")
+            File apkFile = variant.outputs[0].outputFile
+            BatParams params = new BatParams(getServer(variant))
+            params.setVersion(setting.apkVersionName, setting.apkVersionCode as int)
+            params.apkFilePath = apkFile.absolutePath
+            params.updateLog = getUpdateLog()
+            Util.excuteCMD(new File(setting.batScriptPath), params)
+            println("*****************************************************************************\n")
+        }
+        task.group = 'upload'
+        return task
     }
 
     private Task createUploadApkAndPatchTask(Object variant) {

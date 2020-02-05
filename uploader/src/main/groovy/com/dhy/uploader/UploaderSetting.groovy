@@ -5,6 +5,7 @@ class UploaderSetting {
     public Boolean debugOn = true
     public String updateLogFileName = 'DeployLog.log'
     public String updateLogFileEncoding = 'GBK'
+    public String batScriptPath = null
 
 //    public ServerSetting debug = null   //extensions
 //    public ServerSetting release = null //extensions

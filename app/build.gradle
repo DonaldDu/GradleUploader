@@ -38,6 +38,7 @@ if (project.hasProperty('uploaderEnable')) {
         apkVersionCode = android.defaultConfig.versionCode
         apkVersionName = android.defaultConfig.versionName
         oldApkFolder = 'E:\\360Downloads'
+        batScriptPath = 'C:\\Users\\Donald\\IdeaProjects\\NewmanTest\\node\\test2.bat'
         debug {
             loginUrl = APK_UPLOADER_DEBUG_LOGIN_URL
             uploadUrl = APK_UPLOADER_DEBUG_UPLOAD_URL
