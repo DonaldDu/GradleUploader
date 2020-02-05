@@ -6,22 +6,21 @@ import java.io.IOException;
 import io.sigpipe.jbsdiff.ui.FileUI;
 
 public class BSDiffUtil {
-    public static File diff(String oldApkFolderPath, File patchFolder, File newApk, int newApkVersionCode) {
-        AppVersion appVersion = NetUtil.fetchLatestApkVersion();
-        if (appVersion == null) {
+    public static File diff(File patchFolder, String oldApkFolder, String oldApkUrl, int oldApkVersionCode, File newApk, int newApkVersionCode) {
+        if (oldApkUrl == null) {
             System.out.println("********** no old app version found **********");
             return null;
         }
 
-        File oldApkFolder = new File(oldApkFolderPath);
-        if (!oldApkFolder.exists()) oldApkFolder.mkdirs();
+        File mOldApkFolder = new File(oldApkFolder);
+        if (!mOldApkFolder.exists()) mOldApkFolder.mkdirs();
 
-        String apkFileName = getApkFileName(appVersion.url);
+        String apkFileName = getApkFileName(oldApkUrl);
         File oldApk = new File(oldApkFolder, apkFileName);
-        if (!oldApk.exists() || (oldApk.length() != appVersion.packagesize)) {
+        if (!oldApk.exists()) {
             if (oldApk.exists()) oldApk.delete();
             try {
-                NetUtil.downloadFile(oldApk, appVersion.url);
+                NetUtil.downloadFile(oldApk, oldApkUrl);
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
@@ -29,7 +28,7 @@ public class BSDiffUtil {
         }
 
         String newApkMD5 = SignUtils.getMd5ByFile(newApk);
-        String patchFileName = formatPatchFileName(newApkMD5, appVersion.versioncode, newApkVersionCode);
+        String patchFileName = formatPatchFileName(newApkMD5, oldApkVersionCode, newApkVersionCode);
         File patch = new File(patchFolder, patchFileName);
         try {
             FileUI.diff(oldApk, newApk, patch);

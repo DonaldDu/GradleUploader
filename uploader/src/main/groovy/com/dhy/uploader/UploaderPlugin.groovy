@@ -2,8 +2,6 @@ package com.dhy.uploader
 
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
-import com.alibaba.fastjson.serializer.SerializerFeature
-import com.google.gson.Gson
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -33,23 +31,19 @@ class UploaderPlugin implements Plugin<Project> {
                 }
 
                 // Create task.
-                createUploadTask(variant).dependsOn project.tasks["assemble${variantName}"]
+                createUploadApkTask(variant).dependsOn project.tasks["assemble${variantName}"]
                 createUploadApkAndPatchTask(variant).dependsOn project.tasks["assemble${variantName}"]
-                createUploadApkAndPatchWithScriptTask(variant).dependsOn project.tasks["assemble${variantName}"]
             }
         }
     }
 
-    private Task createUploadApkAndPatchWithScriptTask(Object variant) {
+    private Task createUploadApkTask(Object variant) {
         String variantName = variant.name.capitalize()
-        Task task = project.tasks.create("upload${variantName}ApkByScript").doLast {
+        Task task = project.tasks.create("upload${variantName}Apk").doLast {
             println("\n*****************************************************************************")
             File apkFile = variant.outputs[0].outputFile
-            BatParams params = new BatParams(getServer(variant))
-            params.setVersion(setting.apkVersionName, setting.apkVersionCode as int)
-            params.apkFilePath = apkFile.absolutePath
-            params.updateLog = getUpdateLog()
-            Util.excuteCMD(new File(setting.batScriptPath), params)
+            def server = getServer(variant)
+            startBatScript(server, apkFile, null)
             println("*****************************************************************************\n")
         }
         task.group = 'upload'
@@ -60,31 +54,31 @@ class UploaderPlugin implements Plugin<Project> {
         String variantName = variant.name.capitalize()
         Task task = project.tasks.create("upload${variantName}Apk&Patch").doLast {
             println("\n*****************************************************************************")
-            NetUtil.setting = getServer(variant)
-            UploaderSetting setting = getSetting()
+            def server = getServer(variant)
+            def appVersionJson = NetUtil.fetchLatestApkVersion(server.apkVersionUrl)
+            JSONObject appVersion = JSON.parse(appVersionJson)
+            String OLD_APK_URL = "OLD_APK_URL"
+            String OLD_APK_VERSION_CODE = "OLD_APK_VERSION_CODE"
+            server.onGetVersionResponse(appVersion, OLD_APK_URL, OLD_APK_VERSION_CODE)
+            String oldApkUrl = appVersion.getString(OLD_APK_URL)
+            int oldApkVersionCode = appVersion.getIntValue(OLD_APK_VERSION_CODE)
             File apkFile = variant.outputs[0].outputFile
-            def patchFile = BSDiffUtil.diff(setting.oldApkFolder, apkFile.parentFile, apkFile, setting.apkVersionCode)
-            UploadInfo patchInfo = generateUploadInfo(variant)
-            def newApkParams = patchInfo.copyParams()
-            patchInfo.setApkFile(patchFile)
-            patchInfo.markeAsPatch()
-            uploadApk(patchInfo)
+            File patchFolder = apkFile.parentFile
+            File patchFile = BSDiffUtil.diff(patchFolder, setting.oldApkFolder, oldApkUrl, oldApkVersionCode, apkFile, setting.apkVersionCode)
+            startBatScript(server, apkFile, patchFile)
             println("*****************************************************************************\n")
-
-            UploadInfo newApkInfo = new UploadInfo()
-            newApkInfo.params.putAll(newApkParams)
-            uploadApk(newApkInfo)
         }
         task.group = 'upload'
         return task
     }
 
-    UploadInfo generateUploadInfo(Object variant) {
-        UploadInfo uploadInfo = new UploadInfo()
-        uploadInfo.init(getServer(variant))
-        File apkFile = variant.outputs[0].outputFile
-        uploadInfo.setApkFile(apkFile)
-        return uploadInfo
+    private void startBatScript(ServerSetting server, File apkFile, File patchFile) {
+        BatParams params = new BatParams(server)
+        params.setVersion(setting.apkVersionName, setting.apkVersionCode as int)
+        params.apkFilePath = apkFile.absolutePath
+        params.patchFilePath = patchFile?.absolutePath
+        params.updateLog = getUpdateLog()
+        Util.excuteCMD(new File(setting.batScriptPath), params, server.extraEnvs)
     }
 
     private void createUpdateLogFile() {
@@ -108,109 +102,22 @@ class UploaderPlugin implements Plugin<Project> {
     }
 
     private ServerSetting getServer(Object variant) {
+        ServerSetting s
         if (isDebug(variant)) {
-            ServerSetting s = getSetting().debug
+            s = getSetting().debug
             s.isDebug = true
-            return s
         } else {
-            return getSetting().release
+            s = getSetting().release
         }
+        if (s.batScriptPath == null) s.batScriptPath = setting.batScriptPath
+        return s
     }
 
     private static boolean isDebug(Object variant) {
         return variant.name.contains("debug")
     }
 
-    private Task createUploadTask(Object variant) {
-        String variantName = variant.name.capitalize()
-        Task uploadTask = project.tasks.create("upload${variantName}Apk").doLast {
-            // if debug model and debugOn = false no execute upload
-            if (variantName.contains("Debug") && !getSetting().debugOn) {
-                println("$pluginName: the option debugOn is closed, if you want to upload apk file on debug model, you can set debugOn = true to open it")
-                return
-            }
-            println("\n*****************************************************************************")
-            NetUtil.setting = getServer(variant)
-            uploadApk(generateUploadInfo(variant))
-            println("*****************************************************************************\n")
-        }
-        uploadTask.group = 'upload'
-        return uploadTask
-    }
-
-    boolean uploadApk(UploadInfo info) {
-        println("$pluginName: start uploading....")
-        def res = post(info.params)
-        if (!res) {
-            project.logger.error("$pluginName: Failed to upload!")
-            return false
-        } else {
-            println("$pluginName: upload apk success !")
-            return true
-        }
-    }
-
-    static boolean post(Map<String, ?> params) {
-        String result = NetUtil.uploadFile(params)
-        if (result != null) {
-            def gson = new Gson()
-            AppVersion.Response res = gson.fromJson(result, AppVersion.Response)
-            if (res.isOK()) {
-                println(jsonFormat(gson.toJson(res.data)))
-            } else println(jsonFormat(result))
-            return true
-        }
-        return false
-    }
-
-    static String jsonFormat(String jsonString) {
-        JSONObject object = JSONObject.parseObject(jsonString)
-        jsonString = JSON.toJSONString(object,
-                SerializerFeature.PrettyFormat,
-                SerializerFeature.WriteMapNullValue,
-                SerializerFeature.WriteDateUseDateFormat)
-        return jsonString
-    }
-
     UploaderSetting getSetting() {
         return project.uploader
-    }
-
-    private class UploadInfo {
-        public final Map<String, ?> params = new HashMap<>()
-        public ServerSetting server
-
-        void init(ServerSetting server) {
-            this.server = server
-            def setting = getSetting()
-
-            params.put("packagename", server.appId)
-            params.put("versiontype", server.appType)
-            params.put("versionname", getApkVersionName(setting))
-            params.put("versioncode", setting.apkVersionCode)
-            params.put("message", getUpdateLog())
-        }
-
-        Map<String, ?> copyParams() {
-            def map = new HashMap()
-            map.putAll(params)
-            return map
-        }
-
-        private String getApkVersionName(UploaderSetting setting) {
-            if (server.isDebug) {
-                return setting.apkVersionName + '.' + setting.apkVersionCode
-            } else {
-                return setting.apkVersionName
-            }
-        }
-
-        void setApkFile(File apk) {
-            params.put("file", apk)
-        }
-
-        void markeAsPatch() {
-            params.put("versiontype", server.appType + 10_000)
-        }
     }
 }

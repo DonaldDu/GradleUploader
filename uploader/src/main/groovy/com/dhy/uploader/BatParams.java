@@ -7,10 +7,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Map;
 
 public class BatParams {
     private String appId;
-    private int appType;
     private int versionCode;
     private String versionName;
     private boolean isDebug;
@@ -21,7 +21,6 @@ public class BatParams {
 
     public BatParams(ServerSetting setting) {
         appId = setting.appId;
-        appType = setting.appType;
         isDebug = setting.isDebug;
     }
 
@@ -31,7 +30,7 @@ public class BatParams {
         else versionName = name;
     }
 
-    String toEnvironmentFilePath() throws IllegalAccessException, IOException {
+    String toEnvironmentFilePath(Map<String, ?> extraEnvs) throws IllegalAccessException, IOException {
         File apk = new File(apkFilePath);
         File envJsonFile = new File(apk.getParentFile(), "env.json");
         JSONArray jsonArray = new JSONArray();
@@ -42,6 +41,16 @@ public class BatParams {
             jsonObject.put("value", field.get(this));
             jsonArray.add(jsonObject);
         }
+
+        if (extraEnvs != null && !extraEnvs.isEmpty()) {
+            for (String key : extraEnvs.keySet()) {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("key", key);
+                jsonObject.put("value", extraEnvs.get(key));
+                jsonArray.add(jsonObject);
+            }
+        }
+
         if (envJsonFile.exists()) envJsonFile.delete();
         envJsonFile.createNewFile();
         FileOutputStream outputStream = new FileOutputStream(envJsonFile);
