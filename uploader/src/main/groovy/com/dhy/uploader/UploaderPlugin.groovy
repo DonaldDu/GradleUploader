@@ -40,11 +40,9 @@ class UploaderPlugin implements Plugin<Project> {
     private Task createUploadApkTask(Object variant) {
         String variantName = variant.name.capitalize()
         Task task = project.tasks.create("upload${variantName}Apk").doLast {
-            println("\n*****************************************************************************")
             File apkFile = variant.outputs[0].outputFile
             def server = getServer(variant)
             startBatScript(server, apkFile, null)
-            println("*****************************************************************************\n")
         }
         task.group = 'upload'
         return task
@@ -53,7 +51,6 @@ class UploaderPlugin implements Plugin<Project> {
     private Task createUploadApkAndPatchTask(Object variant) {
         String variantName = variant.name.capitalize()
         Task task = project.tasks.create("upload${variantName}Apk&Patch").doLast {
-            println("\n*****************************************************************************")
             def server = getServer(variant)
             def appVersionJson = NetUtil.fetchLatestApkVersion(server.apkVersionUrl)
             JSONObject appVersion = JSON.parse(appVersionJson)
@@ -66,7 +63,6 @@ class UploaderPlugin implements Plugin<Project> {
             File patchFolder = apkFile.parentFile
             File patchFile = BSDiffUtil.diff(patchFolder, setting.oldApkFolder, oldApkUrl, oldApkVersionCode, apkFile, setting.apkVersionCode)
             startBatScript(server, apkFile, patchFile)
-            println("*****************************************************************************\n")
         }
         task.group = 'upload'
         return task
