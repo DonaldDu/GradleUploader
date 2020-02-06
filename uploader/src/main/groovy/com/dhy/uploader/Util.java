@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class Util {
     public static void excuteCMD(File bat, BatParams params, Map<String, ?> extraEnvs) throws Exception {
-        String cmd = String.format("cd %s && start %s %s", bat.getParent(), bat.getAbsolutePath(), params.toEnvironmentFilePath(extraEnvs));
+        String cmd = String.format("cd /d %s && start %s %s", bat.getParent(), bat.getAbsolutePath(), params.toEnvironmentFilePath(extraEnvs));
         excuteCMD(cmd);
     }
 

@@ -32,30 +32,31 @@ android {
 }
 
 if (project.hasProperty('uploaderEnable')) {
-//    uploadApk(0)//global upload apk
+    def debugAppType = 0, releaseAppType = 1
+//    uploadApkW(debugAppType, releaseAppType)//global upload apk
     apply plugin: 'com.dhy.GradleUploader'
     uploader {
         apkVersionCode = android.defaultConfig.versionCode
         apkVersionName = android.defaultConfig.versionName
-        oldApkFolder = 'E:\\360Downloads'
-        batScriptPath = 'C:\\Users\\Donald\\IdeaProjects\\NewmanTest\\node\\test2.bat'
+        oldApkFolder = OLD_APK_FOLDER
+        batScriptPath = BAT_PATH_DEPLOY_APK_W
         debug {
-            loginUrl = APK_UPLOADER_DEBUG_LOGIN_URL
-            uploadUrl = APK_UPLOADER_DEBUG_UPLOAD_URL
-            loginToken = APK_UPLOADER_DEBUG_LOGIN_TOKEN
-            apkVersionUrl = APK_UPLOADER_DEBUG_VERSION_URL
-
             appId = android.defaultConfig.applicationId
-            appType = 0
+            apkVersionUrl = APK_UPLOADER_DEBUG_BASE_URL + "/admin/versioninfo/get?packagename=${appId}&versiontype=" + debugAppType
+            extraEnvs = ["appType": debugAppType, "host": APK_UPLOADER_DEBUG_BASE_URL]
+            onGetVersionResponse = { json, KEY_APK_URL, KEY_APK_VERSION_CODE ->
+                json.put(KEY_APK_URL, json.getJSONObject("data")?.getString("url"))
+                json.put(KEY_APK_VERSION_CODE, json.getJSONObject("data")?.getString("versioncode"))
+            }
         }
         release {
-            loginUrl = APK_UPLOADER_RELEASE_LOGIN_URL
-            uploadUrl = APK_UPLOADER_RELEASE_UPLOAD_URL
-            loginToken = APK_UPLOADER_RELEASE_LOGIN_TOKEN
-            apkVersionUrl = APK_UPLOADER_RELEASE_VERSION_URL
-
             appId = android.defaultConfig.applicationId
-            appType = 1
+            apkVersionUrl = APK_UPLOADER_RELEASE_BASE_URL + "/admin/versioninfo/get?packagename=${appId}&versiontype=" + releaseAppType
+            extraEnvs = ["appType": debugAppType, "host": APK_UPLOADER_RELEASE_BASE_URL]
+            onGetVersionResponse = { json, KEY_APK_URL, KEY_APK_VERSION_CODE ->
+                json.put(KEY_APK_URL, json.getJSONObject("data")?.getString("url"))
+                json.put(KEY_APK_VERSION_CODE, json.getJSONObject("data")?.getString("versioncode"))
+            }
         }
     }
 }
