@@ -33,37 +33,37 @@ android {
 
 if (project.hasProperty('uploaderEnable')) {
     def debugAppType = 0, releaseAppType = 1
-//    uploadApkW(debugAppType, releaseAppType)//global upload apk
-    apply plugin: 'com.dhy.GradleUploader'
-    uploader {
-        apkVersionCode = android.defaultConfig.versionCode
-        apkVersionName = android.defaultConfig.versionName
-        oldApkFolder = OLD_APK_FOLDER
-        batScriptPath = BAT_PATH_DEPLOY_APK_W
-        debug {
-            appId = android.defaultConfig.applicationId
-            apkVersionUrl = APK_UPLOADER_DEBUG_BASE_URL + "/admin/versioninfo/get?packagename=${appId}&versiontype=" + debugAppType
-            extraEnvs = ["appType": debugAppType, "host": APK_UPLOADER_DEBUG_BASE_URL]
-            onGetVersionResponse = { json, KEY_APK_URL, KEY_APK_VERSION_CODE ->
-                json.put(KEY_APK_URL, json.getJSONObject("data")?.getString("url"))
-                json.put(KEY_APK_VERSION_CODE, json.getJSONObject("data")?.getString("versioncode"))
-            }
-        }
-        release {
-            appId = android.defaultConfig.applicationId
-            apkVersionUrl = APK_UPLOADER_RELEASE_BASE_URL + "/admin/versioninfo/get?packagename=${appId}&versiontype=" + releaseAppType
-            extraEnvs = ["appType": debugAppType, "host": APK_UPLOADER_RELEASE_BASE_URL]
-            onGetVersionResponse = { json, KEY_APK_URL, KEY_APK_VERSION_CODE ->
-                json.put(KEY_APK_URL, json.getJSONObject("data")?.getString("url"))
-                json.put(KEY_APK_VERSION_CODE, json.getJSONObject("data")?.getString("versioncode"))
-            }
-        }
-    }
+    uploadApkW(debugAppType, releaseAppType)//global upload apk
+//    apply plugin: 'com.dhy.GradleUploader'
+//    uploader {
+//        apkVersionCode = android.defaultConfig.versionCode
+//        apkVersionName = android.defaultConfig.versionName
+//        oldApkFolder = OLD_APK_FOLDER
+//        batScriptPath = BAT_PATH_DEPLOY_APK_W
+//        debug {
+//            appId = android.defaultConfig.applicationId
+//            apkVersionUrl = APK_UPLOADER_DEBUG_BASE_URL + "/admin/versioninfo/get?packagename=${appId}&versiontype=" + debugAppType
+//            extraEnvs = ["appType": debugAppType, "host": APK_UPLOADER_DEBUG_BASE_URL]
+//            onGetVersionResponse = { json, KEY_APK_URL, KEY_APK_VERSION_CODE ->
+//                json.put(KEY_APK_URL, json.getJSONObject("data")?.getString("url"))
+//                json.put(KEY_APK_VERSION_CODE, json.getJSONObject("data")?.getString("versioncode"))
+//            }
+//        }
+//        release {
+//            appId = android.defaultConfig.applicationId
+//            apkVersionUrl = APK_UPLOADER_RELEASE_BASE_URL + "/admin/versioninfo/get?packagename=${appId}&versiontype=" + releaseAppType
+//            extraEnvs = ["appType": debugAppType, "host": APK_UPLOADER_RELEASE_BASE_URL]
+//            onGetVersionResponse = { json, KEY_APK_URL, KEY_APK_VERSION_CODE ->
+//                json.put(KEY_APK_URL, json.getJSONObject("data")?.getString("url"))
+//                json.put(KEY_APK_VERSION_CODE, json.getJSONObject("data")?.getString("versioncode"))
+//            }
+//        }
+//    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13'
     implementation 'com.android.support:appcompat-v7:28.0.0'
     testImplementation 'com.squareup.okhttp3:okhttp:3.14.2'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
